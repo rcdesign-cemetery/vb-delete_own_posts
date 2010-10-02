@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<product productid="del_own_posts" active="1">
+	<title>Delete Own Posts</title>
+	<description>Allows user to delete own threads/posts if there is no answer.</description>
+	<version>0.1</version>
+	<url><![CDATA[http://www.vbulletin.org/forum/misc.php?do=producthelp&pid=del_own_posts]]></url>
+	<versioncheckurl><![CDATA[http://www.vbulletin.org/forum/misc.php?do=productcheck&pid=del_own_posts]]></versioncheckurl>
+	<apm_releasedate>0</apm_releasedate>
+	<apm_author />
+	<apm_relatedurl />
+	<apm_extrainfo />
+	<apm_extraedit />
+	<dependencies>
+	</dependencies>
+	<codes>
+	</codes>
+	<templates>
+	</templates>
+	<stylevardfns>
+	</stylevardfns>
+	<stylevars>
+	</stylevars>
+	<plugins>
+		<plugin active="1" executionorder="5">
+			<title>Show post delete button to user</title>
+			<hookname>ajax_start</hookname>
+			<phpcode><![CDATA[if ($_POST['do'] == 'quickedit' 
+    && $postinfo['postid'] == $threadinfo['lastpostid'] 
+    && $vbulletin->userinfo['userid'] == $postinfo['userid'] 
+    && $postinfo['dateline'] > (TIMENOW - ($vbulletin->options['dop_del_time_limit'] * 60)))
+{
+    $vbulletin->userinfo['forumpermissions'][$threadinfo['forumid']] = 
+            $vbulletin->userinfo['forumpermissions'][$threadinfo['forumid']] | $vbulletin->bf_ugp_forumpermissions['candeletepost'];
+    if ($threadinfo['replycount'] == 0)
+    {
+        $vbulletin->userinfo['forumpermissions'][$threadinfo['forumid']] = 
+                $vbulletin->userinfo['forumpermissions'][$threadinfo['forumid']] | $vbulletin->bf_ugp_forumpermissions['candeletethread'];
+    }
+}]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Allow user to delete post</title>
+			<hookname>global_bootstrap_complete</hookname>
+			<phpcode><![CDATA[global $threadinfo, $postinfo, $vbulletin;
+
+if (THIS_SCRIPT == 'editpost' 
+    && $postinfo['postid'] == $threadinfo['lastpostid']
+    && $postinfo['dateline'] > (TIMENOW - ($vbulletin->options['dop_del_time_limit'] * 60)))
+{
+    $vbulletin->userinfo['forumpermissions'][$threadinfo['forumid']] = 
+            $vbulletin->userinfo['forumpermissions'][$threadinfo['forumid']] | $vbulletin->bf_ugp_forumpermissions['candeletepost'];
+            
+    if ($threadinfo['replycount'] == 0)
+    {
+        $vbulletin->userinfo['forumpermissions'][$threadinfo['forumid']] = 
+                $vbulletin->userinfo['forumpermissions'][$threadinfo['forumid']] | $vbulletin->bf_ugp_forumpermissions['candeletethread'];
+    }
+    
+    if ($_POST['do'] == 'deletepost' 
+        && $vbulletin->options['dop_del_time_limit'] > $vbulletin->options['edittimelimit'])
+    {
+        $vbulletin->options['edittimelimit'] = $vbulletin->options['dop_del_time_limit'];   
+    }
+}]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Show management menu item to delete thread</title>
+			<hookname>showthread_post_start</hookname>
+			<phpcode><![CDATA[if (!$thread['replycount'] 
+    && $vbulletin->userinfo['userid'] == $thread['postuserid'])
+{
+    $forumperms = $forumperms | $vbulletin->bf_ugp_forumpermissions['candeletepost'];
+    $forumperms = $forumperms | $vbulletin->bf_ugp_forumpermissions['candeletethread'];
+    
+    if ($vbulletin->options['dop_del_time_limit'] > $vbulletin->options['edittimelimit'])
+    {
+        $vbulletin->options['edittimelimit'] = $vbulletin->options['dop_del_time_limit'];
+    }
+}]]></phpcode>
+		</plugin>
+		<plugin active="1" executionorder="5">
+			<title>Allow user to delete thread</title>
+			<hookname>threadmanage_start</hookname>
+			<phpcode><![CDATA[if (!$threadinfo['replycount']
+    && $vbulletin->userinfo['userid'] == $threadinfo['postuserid']
+    && ($_REQUEST['do'] == 'deletethread' || $_POST['do'] == 'dodeletethread'))
+{
+    $forumperms = $forumperms | $vbulletin->bf_ugp_forumpermissions['candeletepost'];
+    $forumperms = $forumperms | $vbulletin->bf_ugp_forumpermissions['candeletethread'];
+    
+    if ($vbulletin->options['dop_del_time_limit'] > $vbulletin->options['edittimelimit'])
+    {
+        $vbulletin->options['edittimelimit'] = $vbulletin->options['dop_del_time_limit'];
+    }
+}]]></phpcode>
+		</plugin>
+	</plugins>
+	<phrases>
+		<phrasetype name="vBulletin Settings" fieldname="vbsettings">
+			<phrase name="setting_dop_del_time_limit_desc" date="1285750882" username="Vitaly" version="0.1"><![CDATA[Period, when user can delete own posts & threads, if no replies follow (in minutes)]]></phrase>
+			<phrase name="setting_dop_del_time_limit_title" date="1285750882" username="Vitaly" version="0.1"><![CDATA[Message Delete Time Limit]]></phrase>
+			<phrase name="settinggroup_del_own_posts" date="1285749983" username="ruseinov" version="0.1"><![CDATA[Delete Own Posts]]></phrase>
+		</phrasetype>
+	</phrases>
+	<options>
+		<settinggroup name="del_own_posts" displayorder="65535">
+			<setting varname="dop_del_time_limit" displayorder="10">
+				<datatype>number</datatype>
+				<defaultvalue>10</defaultvalue>
+			</setting>
+		</settinggroup>
+	</options>
+	<helptopics>
+	</helptopics>
+	<cronentries>
+	</cronentries>
+	<faqentries>
+	</faqentries>
+	<templateedits>
+	</templateedits>
+</product>
