@@ -68,11 +68,12 @@ if (THIS_SCRIPT == 'editpost'
 			<title>Show management menu item to delete thread</title>
 			<hookname>showthread_post_start</hookname>
 			<phpcode><![CDATA[if (!$thread['replycount'] 
-    && $vbulletin->userinfo['userid'] == $thread['postuserid'])
+    && $vbulletin->userinfo['userid'] == $thread['postuserid']
+    && $thread['dateline'] > (TIMENOW - ($vbulletin->options['dop_del_time_limit'] * 60)))
 {
     $forumperms = $forumperms | $vbulletin->bf_ugp_forumpermissions['candeletepost'];
     $forumperms = $forumperms | $vbulletin->bf_ugp_forumpermissions['candeletethread'];
-    
+
     if ($vbulletin->options['dop_del_time_limit'] > $vbulletin->options['edittimelimit'])
     {
         $vbulletin->options['edittimelimit'] = $vbulletin->options['dop_del_time_limit'];
@@ -84,11 +85,12 @@ if (THIS_SCRIPT == 'editpost'
 			<hookname>threadmanage_start</hookname>
 			<phpcode><![CDATA[if (!$threadinfo['replycount']
     && $vbulletin->userinfo['userid'] == $threadinfo['postuserid']
-    && ($_REQUEST['do'] == 'deletethread' || $_POST['do'] == 'dodeletethread'))
+    && ($_REQUEST['do'] == 'deletethread' || $_POST['do'] == 'dodeletethread')
+    && $threadinfo['dateline'] > (TIMENOW - ($vbulletin->options['dop_del_time_limit'] * 60)))
 {
     $forumperms = $forumperms | $vbulletin->bf_ugp_forumpermissions['candeletepost'];
     $forumperms = $forumperms | $vbulletin->bf_ugp_forumpermissions['candeletethread'];
-    
+
     if ($vbulletin->options['dop_del_time_limit'] > $vbulletin->options['edittimelimit'])
     {
         $vbulletin->options['edittimelimit'] = $vbulletin->options['dop_del_time_limit'];
